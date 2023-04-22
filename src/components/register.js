@@ -34,7 +34,7 @@ export default function Register({setShowLogin, setShowRegister}) {
 
     return (
         <>
-            <div className={"w-1/5 h-2.5/5 bg-discordGrey-std rounded-lg shadow-xl z-50 absolute flex flex-col"}>
+            <div className={"w-[20rem] bg-discordGrey-std rounded-lg shadow-xl z-50 absolute flex flex-col"}>
                 <h1 className={"text-center font-bold mt-5 text-[1.5rem] text-slate-300"}>Create Account</h1>
                 <form onSubmit={handleSubmit(onSubmit)} className={"flex flex-col gap-6"}>
                     <input

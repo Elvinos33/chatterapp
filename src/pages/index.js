@@ -5,6 +5,7 @@ import {Fragment, useEffect, useState, useRef} from "react";
 import {auth, db} from "@/lib/firebase";
 import {addDoc, deleteDoc, getDocs, collection, onSnapshot, orderBy, query, serverTimestamp, where} from "firebase/firestore";
 import {AiOutlinePlus, AiOutlineSend, AiOutlineDelete} from "react-icons/ai";
+import {MdOutlineKeyboardArrowLeft, MdOutlineKeyboardArrowRight} from "react-icons/md";
 import {useForm} from "react-hook-form";
 import { reveal } from "react-burger-menu"
 
@@ -29,7 +30,7 @@ function Home() {
     }
 
     function handleHideSidebarClick() {
-        setShowSidebar(true)
+        setShowSidebar(!showSidebar)
     }
 
     async function onSubmitMessage(data) {
@@ -159,8 +160,8 @@ function Home() {
           <meta name="description" content="Chat app for you and your friends!" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
         </Head>
-        <main className={"h-screen flex overflow-x-clip"}>
-            <div className={`w-1/5 bg-discordGrey-darker flex flex-col h-screen ${showSidebar ? 'hidden' : 'shown' } `}>
+        <main className={"h-screen flex"}>
+            <div className={`lg:w-1/5 sm:w-full bg-discordGrey-darker flex flex-col h-screen ${showSidebar ? 'hidden' : 'visible' } `}>
                 <div className={"flex flex-row justify-center items-center"}>
                     <div>
                         <Menu>
@@ -177,8 +178,8 @@ function Home() {
                         </Menu>
                     </div>
 
-                    <h1 className={"flex-1  font-bold py-4 text-slate-300 text-[20px] border-b border-discordGrey-dark"}>Hey, {auth.currentUser.displayName}</h1>
-                    <button onClick={handleAddRoomClick} className={"p-3 mr-4 text-slate-300 bg-discordGrey-dark rounded-lg flex items-center justify-center transition hover:bg-slate-300 hover:text-black "}>
+                    <h1 className={"flex-1 font-bold py-4 text-slate-300 text-[20px] border-b border-discordGrey-dark"}>Hey, {auth.currentUser.displayName}</h1>
+                    <button onClick={handleAddRoomClick} className={"p-3 mx-4 text-slate-300 bg-discordGrey-dark rounded-lg flex items-center justify-center transition hover:bg-slate-300 hover:text-black "}>
                         <AiOutlinePlus className={""}/>
                     </button>
                 </div>
@@ -214,8 +215,8 @@ function Home() {
                         </Tab.List>
                     </Tab.Group>
                     {showNewRoom &&
-                        <form  onSubmit={handleSubmitRoom(onSubmitRoom)} className={"mx-4 mt-6 rounded-lg transition transform translate-x-1 bg-slate-300 text-black"}>
-                            <input autoFocus={true} autoCapitalize={"on"} className={"bg-slate-300 p-4 px-6 rounded-lg"} type="text" placeholder={"Room name..."} {...registerRoom("room", {required: true})}/>
+                        <form  onSubmit={handleSubmitRoom(onSubmitRoom)} className={" mx-4 mt-6 rounded-lg transition transform translate-x-1 text-black"}>
+                            <input autoFocus={true} autoCapitalize={"on"} className={"bg-slate-300 w-full h-full p-4 rounded-lg"} type="text" placeholder={"Room name..."} {...registerRoom("room", {required: true})}/>
                         </form>
                     }
                 </div>
@@ -223,7 +224,9 @@ function Home() {
             <div className={"flex-1 bg-slate-300 h-screen flex flex-col"}>
                 <div className={"text-center font-bold py-4 text-[18px] bg-discordGrey-dark shadow-xl flex"}>
                     <button onClick={handleHideSidebarClick} className={"px-4 text-slate-300"}>
-                        s
+                        {showSidebar ?
+                         <MdOutlineKeyboardArrowRight/>: <MdOutlineKeyboardArrowLeft/>
+                        }
                     </button>
                     <h1 className={"flex-1 pr-4 text-slate-300"}>{selectedRoom}</h1>
                 </div>
@@ -262,7 +265,7 @@ function Home() {
                 <div className={"bg-discordGrey-std"}>
                     <div className={"mt-4 flex justify-center items-center bg-discordGrey-dark"}>
                         <form action="" onSubmit={handleSubmit(onSubmitMessage)} className={" flex text-[18px] my-4 w-full px-4"}>
-                            <input type="text" autoComplete={"off"} className={"flex-1 rounded-lg p-2 bg-discordGrey-light placeholder-gray-400 placeholder-opacity-75 text-slate-300"} placeholder={"Message..."} {...register("message", {required: true})} />
+                            <input type="text" autoComplete={"off"} className={"w-full rounded-lg p-2 bg-discordGrey-light placeholder-gray-400 placeholder-opacity-75 text-slate-300"} placeholder={"Message..."} {...register("message", {required: true})} />
                             <button type={"submit"} className={"mx-3"}>
                                 <AiOutlineSend className={"h-12 w-12 flex-1 rounded-lg p-3 bg-discordGrey-light text-slate-300 transition hover:text-black hover:bg-slate-300"}/>
                             </button>
