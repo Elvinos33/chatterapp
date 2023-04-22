@@ -1,124 +1,278 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
+import Head from "next/head";
+import {withAuth} from "@/lib/withAuth";
+import {Tab, Menu} from "@headlessui/react";
+import {Fragment, useEffect, useState, useRef} from "react";
+import {auth, db} from "@/lib/firebase";
+import {addDoc, deleteDoc, getDocs, collection, onSnapshot, orderBy, query, serverTimestamp, where} from "firebase/firestore";
+import {AiOutlinePlus, AiOutlineSend, AiOutlineDelete} from "react-icons/ai";
+import {useForm} from "react-hook-form";
+import { reveal } from "react-burger-menu"
 
-const inter = Inter({ subsets: ['latin'] })
 
-export default function Home() {
+function Home() {
+
+    const [selectedIndex, setSelectedIndex] = useState(0);
+    const [loadingRooms, setLoadingRooms] = useState(true);
+    const [loadingMessages, setLoadingMessages] = useState(true);
+    const [rooms, setRooms] = useState([]);
+    const [selectedRoom, setSelectedRoom] = useState("Welcome");
+    const [messages, setMessages] = useState([]);
+    const {register, handleSubmit, reset} = useForm();
+    const {register:registerRoom, handleSubmit: handleSubmitRoom, reset: resetRoom} = useForm();
+    const messagesEndRef = useRef(null);
+    const [showNewRoom, setShowNewRoom] = useState(false);
+    const [showSidebar, setShowSidebar] = useState(false);
+
+    let prevAuthor = null;
+    function handleRoomClick(roomId) {
+        setSelectedRoom(roomId)
+    }
+
+    function handleHideSidebarClick() {
+        setShowSidebar(true)
+    }
+
+    async function onSubmitMessage(data) {
+        try {
+            reset();
+            return await addDoc(collection(db, "Messages"), {
+                author: auth.currentUser.displayName,
+                createdAt: serverTimestamp(),
+                message: data.message,
+                room: selectedRoom,
+            })
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    async function handleRoomDelete(roomId) {
+        try {
+            const q = query(collection(db, "Rooms"), where("name", "==", roomId));
+            console.log(q)
+            const querySnapshot = await getDocs(q);
+            querySnapshot.forEach((doc) => {
+                deleteDoc( doc.ref);
+            });
+            setSelectedRoom("")
+
+        } catch (error) {
+            console.log(error)
+        }
+
+    }
+    async function handleMessageDelete(createdAt, author, room) {
+        try {
+            const q = query(
+                collection(db, "Messages"),
+                where("createdAt", "==", createdAt),
+                where("author", "==", author),
+                where("room", "==", room)
+            );
+            console.log(q)
+            const querySnapshot = await getDocs(q);
+            querySnapshot.forEach((doc) => {
+                deleteDoc( doc.ref);
+            });
+
+        } catch (error) {
+            console.log(error)
+        }
+
+    }
+
+    async function onSubmitRoom(data) {
+        try {
+            const querySnapshot = await getDocs(query(collection(db, "Rooms"), where("name", "==", data.room)));
+            if (querySnapshot.size > 0) {
+                alert("Room already exists.")
+            } else {
+                const docRef = await addDoc(collection(db, "Rooms"), {
+                    name: data.room.charAt(0).toUpperCase() + data.room.slice(1),
+                    createdAt: serverTimestamp(),
+                })
+                    .finally(
+                        setShowNewRoom(false),
+                        resetRoom(),
+                    )
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    function handleAddRoomClick() {
+        setShowNewRoom(!showNewRoom)
+        resetRoom();
+    }
+
+    function handleLogOut() {
+        auth.signOut()
+    }
+
+    useEffect(() => {
+        console.log(messages);
+    }, [messages]);
+
+    useEffect(() => {
+        // Fetch all messages for the selected room from the Firebase database
+        if (selectedRoom) {
+            const q = query(
+                collection(db, "Messages"),
+                where("room", "==", selectedRoom),
+                orderBy("createdAt", "asc")
+            );
+            return onSnapshot(q, (snapshot) => {
+                const messagesData = snapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }));
+                setMessages(messagesData);
+                setLoadingMessages(false);
+            });
+        }
+    }, [selectedRoom]);
+
+    useEffect(() => {
+        const q = query(
+            collection(db, "Rooms"),
+            orderBy("createdAt", "asc")
+        )
+        return onSnapshot(q, (snapshot) => {
+            const roomsData = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+            setRooms(roomsData);
+            setLoadingRooms(false)
+        });
+    }, []);
+
+    useEffect(() => {
+        messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
+    }, [messages]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/pages/index.js</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+      <>
+        <Head>
+          <title>Chat - Home</title>
+          <meta name="description" content="Chat app for you and your friends!" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+        </Head>
+        <main className={"h-screen flex overflow-x-clip"}>
+            <div className={`w-1/5 bg-discordGrey-darker flex flex-col h-screen ${showSidebar ? 'hidden' : 'shown' } `}>
+                <div className={"flex flex-row justify-center items-center"}>
+                    <div>
+                        <Menu>
+                            <Menu.Button className={"mx-4 bg-discordGrey-dark rounded-full text-slate-300 h-8 w-8 flex justify-center items-center"}>{auth.currentUser.displayName[0]}</Menu.Button>
+                            <Menu.Items>
+                                <Menu.Item>
+                                    {({active}) => (
+                                        <button onClick={handleLogOut} className={" flex justify-center items-center flex-col absolute ml-2 text text-slate-300 mt-1 p-2 rounded-lg bg-discordGrey-dark z-50 hover:bg-slate-300 hover:text-black"}>
+                                            Log Out
+                                        </button>
+                                    )}
+                                </Menu.Item>
+                            </Menu.Items>
+                        </Menu>
+                    </div>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700/10 after:dark:from-sky-900 after:dark:via-[#0141ff]/40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+                    <h1 className={"flex-1  font-bold py-4 text-slate-300 text-[20px] border-b border-discordGrey-dark"}>Hey, {auth.currentUser.displayName}</h1>
+                    <button onClick={handleAddRoomClick} className={"p-3 mr-4 text-slate-300 bg-discordGrey-dark rounded-lg flex items-center justify-center transition hover:bg-slate-300 hover:text-black "}>
+                        <AiOutlinePlus className={""}/>
+                    </button>
+                </div>
+                <div className={"overflow-scroll scrollbar-hide flex-1"}>
+                    <Tab.Group vertical selectedIndex={selectedIndex} onChange={setSelectedIndex}>
+                        <Tab.List className={"flex gap-4 flex-col "}>
+                            {loadingRooms ? (
+                                <p className={"text-center text-slate-300 p-4"}>Loading...</p>
+                            ) : (
+                                <>
+                                {rooms.map((room) => (
+                                        <Tab  as={Fragment} key={room.id}>
+                                            {({ selected }) => (
+                                                /* Use the `selected` state to conditionally style the selected tab. */
+                                                <div
+                                                    onClick={() => handleRoomClick(room.name)}
+                                                    className={
+                                                        selected ? 'flex justify-between p-4 mx-4 mt-2 rounded-lg bg-slate-200 translate-x-1 font-bold' : 'flex justify-between p-4 mx-4 mt-2 bg-discordGrey-std text-slate-400 rounded-lg transition transform hover:translate-x-1 hover:bg-slate-300 hover:text-black'
+                                                    }
+                                                >
+                                                    <p>{room.name}</p>
+                                                    <button onClick={() => handleRoomDelete(room.name)}>
+                                                        <AiOutlineDelete/>
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </Tab>
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`${inter.className} mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p
-            className={`${inter.className} m-0 max-w-[30ch] text-sm opacity-50`}
-          >
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+                                    ))}
+                                </>
+                            )}
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`${inter.className} mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p
-            className={`${inter.className} m-0 max-w-[30ch] text-sm opacity-50`}
-          >
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+                        </Tab.List>
+                    </Tab.Group>
+                    {showNewRoom &&
+                        <form  onSubmit={handleSubmitRoom(onSubmitRoom)} className={"mx-4 mt-6 rounded-lg transition transform translate-x-1 bg-slate-300 text-black"}>
+                            <input autoFocus={true} autoCapitalize={"on"} className={"bg-slate-300 p-4 px-6 rounded-lg"} type="text" placeholder={"Room name..."} {...registerRoom("room", {required: true})}/>
+                        </form>
+                    }
+                </div>
+            </div>
+            <div className={"flex-1 bg-slate-300 h-screen flex flex-col"}>
+                <div className={"text-center font-bold py-4 text-[18px] bg-discordGrey-dark shadow-xl flex"}>
+                    <button onClick={handleHideSidebarClick} className={"px-4 text-slate-300"}>
+                        s
+                    </button>
+                    <h1 className={"flex-1 pr-4 text-slate-300"}>{selectedRoom}</h1>
+                </div>
+                <div ref={messagesEndRef} className={"bg-discordGrey-std w-full h-screen pt-2 overflow-y-scroll"}>
+                    {loadingMessages ? (
+                        <p className={"text-center text-slate-300 p-4"}>Loading...</p>
+                    ) : (
+                        <>
+                            {messages.map((message, index) => {
+                                const isCurrentUser = message.author === auth.currentUser.displayName;
+                                const isSameAuthor = prevAuthor === message.author;
+                                prevAuthor = message.author;
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`${inter.className} mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p
-            className={`${inter.className} m-0 max-w-[30ch] text-sm opacity-50`}
-          >
-            Discover and deploy boilerplate example Next.js&nbsp;projects.
-          </p>
-        </a>
+                                return (
+                                    <>
+                                        <div key={message.id} className={`flex flex-row ${isCurrentUser ? 'justify-end ml-40 text-end' : 'justify-start mr-40 text-start'}`}>
+                                            <div className={`flex flex-col text-sm px-4 pt-2 text-slate-300`}>
+                                                {!isSameAuthor && <p className={"mb-2 text-[18px] font-bold text-blue-500"}>{message.author}</p>}
+                                                <div  className={`flex justify-end flex-row gap-2 ${isCurrentUser ? 'flex-row' : 'flex-row-reverse'}`}>
+                                                    {isCurrentUser &&
+                                                        <button onClick={() => handleMessageDelete( message.createdAt, message.author, message.room)}>
+                                                            <AiOutlineDelete/>
+                                                        </button>}
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`${inter.className} mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p
-            className={`${inter.className} m-0 max-w-[30ch] text-sm opacity-50`}
-          >
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+                                                    <p className={"bg-discordGrey-light rounded-lg p-2 text-[16px] break-all"}>{message.message}</p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </>
+                                );
+                            })}
+                        </>
+                    )}
+                </div>
+                <div className={"bg-discordGrey-std"}>
+                    <div className={"mt-4 flex justify-center items-center bg-discordGrey-dark"}>
+                        <form action="" onSubmit={handleSubmit(onSubmitMessage)} className={" flex text-[18px] my-4 w-full px-4"}>
+                            <input type="text" autoComplete={"off"} className={"flex-1 rounded-lg p-2 bg-discordGrey-light placeholder-gray-400 placeholder-opacity-75 text-slate-300"} placeholder={"Message..."} {...register("message", {required: true})} />
+                            <button type={"submit"} className={"mx-3"}>
+                                <AiOutlineSend className={"h-12 w-12 flex-1 rounded-lg p-3 bg-discordGrey-light text-slate-300 transition hover:text-black hover:bg-slate-300"}/>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+      </>
   )
 }
+
+export default withAuth(Home)
