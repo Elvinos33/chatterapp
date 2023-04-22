@@ -263,7 +263,7 @@ function Home() {
                     )}
                 </div>
                 <div className={"bg-discordGrey-std"}>
-                    <div className={"mt-4 flex justify-center items-center bg-discordGrey-dark"}>
+                    <div className={"mt-4 static flex justify-center items-center bg-discordGrey-dark"}>
                         <form action="" onSubmit={handleSubmit(onSubmitMessage)} className={" flex text-[18px] my-4 w-full px-4"}>
                             <input type="text" autoComplete={"off"} className={"w-full rounded-lg p-2 bg-discordGrey-light placeholder-gray-400 placeholder-opacity-75 text-slate-300"} placeholder={"Message..."} {...register("message", {required: true})} />
                             <button type={"submit"} className={"mx-3"}>
