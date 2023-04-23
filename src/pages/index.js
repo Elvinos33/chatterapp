@@ -8,6 +8,7 @@ import {AiOutlinePlus, AiOutlineSend, AiOutlineDelete} from "react-icons/ai";
 import {MdOutlineKeyboardArrowLeft, MdOutlineKeyboardArrowRight} from "react-icons/md";
 import {useForm} from "react-hook-form";
 import {useMediaQuery} from "react-responsive";
+import Image from "next/image";
 
 
 function Home() {
@@ -28,6 +29,7 @@ function Home() {
     let prevAuthor = null;
     function handleRoomClick(roomId) {
         setSelectedRoom(roomId)
+        setShowSidebar(false)
     }
 
     function handleHideSidebarClick() {
@@ -56,7 +58,7 @@ function Home() {
             querySnapshot.forEach((doc) => {
                 deleteDoc( doc.ref);
             });
-            setSelectedRoom("")
+            setSelectedRoom("Welcome")
 
         } catch (error) {
             console.log(error)
@@ -86,6 +88,7 @@ function Home() {
     async function onSubmitRoom(data) {
         try {
             const querySnapshot = await getDocs(query(collection(db, "Rooms"), where("name", "==", data.room)));
+            resetRoom()
             if (querySnapshot.size > 0) {
                 alert("Room already exists.")
             } else {
@@ -95,7 +98,6 @@ function Home() {
                 })
                     .finally(
                         setShowNewRoom(false),
-                        resetRoom(),
                     )
             }
         } catch (error) {
@@ -110,6 +112,10 @@ function Home() {
 
     function handleLogOut() {
         auth.signOut().then(r => console.log("Signed Out", {r}))
+    }
+
+    function isImageUrl(url) {
+        return /\.(jpg|png|gif)$/.test(url);
     }
 
     useEffect(() => {
@@ -162,7 +168,7 @@ function Home() {
           <meta name="viewport" content="width=device-width, initial-scale=1" />
         </Head>
         <main className={"absolute inset-0 flex"}>
-            <div className={`lg:w-1/5 lg:relative lg:mr-0 absolute inset-0 mr-8 bg-discordGrey-darker flex flex-col  ${showSidebar ? 'block' : 'hidden' } `}>
+            <div className={`lg:w-1/5 lg:relative lg:mr-0 absolute inset-0 mr-8 bg-discordGrey-darker flex flex-col  ${ isDesktop || showSidebar ? 'block' : 'hidden' }`}>
                 <div className={"flex flex-row justify-center items-center"}>
                     <div>
                         <Menu>
@@ -203,13 +209,15 @@ function Home() {
                                                 <div
                                                     onClick={() => handleRoomClick(room.name)}
                                                     className={
-                                                        selected ? 'flex justify-between p-4 mx-4 m-2 rounded-lg bg-slate-200 translate-x-1 font-bold' : 'flex justify-between p-4 mx-4 m-2 bg-discordGrey-std text-slate-400 rounded-lg transition transform hover:translate-x-1 hover:bg-slate-300 hover:text-black'
+                                                        room.name === selectedRoom ? 'flex justify-between p-4 mx-4 m-2 rounded-lg bg-slate-200 translate-x-1 font-bold' : 'flex justify-between p-4 mx-4 m-2 bg-discordGrey-std text-slate-400 rounded-lg transition transform hover:translate-x-1 hover:bg-slate-300 hover:text-black'
                                                     }
                                                 >
                                                     <p>{room.name}</p>
-                                                    <button onClick={() => handleRoomDelete(room.name)}>
-                                                        <AiOutlineDelete/>
-                                                    </button>
+                                                    {room.name !== "Welcome" && (
+                                                        <button onClick={() => handleRoomDelete(room.name)}>
+                                                            <AiOutlineDelete/>
+                                                        </button>
+                                                    )}
                                                 </div>
                                             )}
                                         </Tab>
@@ -229,11 +237,11 @@ function Home() {
             </div>
             <div className={"flex-1 h-full bg-slate-300 flex flex-col"}>
                 <div className={"text-center font-bold py-4 text-[18px] bg-discordGrey-dark shadow-xl flex"}>
+                    {!isDesktop &&
                     <button onClick={handleHideSidebarClick} className={"px-4 text-slate-300"}>
-                        {showSidebar ?
-                            <MdOutlineKeyboardArrowLeft/> : <MdOutlineKeyboardArrowRight/>
-                        }
+                           <MdOutlineKeyboardArrowRight/>
                     </button>
+                    }
                     <h1 className={"flex-1 pr-16 text-slate-300"}>{selectedRoom}</h1>
                 </div>
                 <div ref={messagesEndRef} className={"bg-discordGrey-std w-full h-full pt-2 overflow-y-scroll"}>
@@ -244,20 +252,29 @@ function Home() {
                             {messages.map((message) => {
                                 const isCurrentUser = message.author === auth.currentUser.displayName;
                                 const isSameAuthor = prevAuthor === message.author;
+                                const imageUrl =isImageUrl(message.message);
                                 prevAuthor = message.author;
 
                                 return (
                                     <>
-                                        <div key={message.id} className={`flex flex-row ${isCurrentUser ? 'justify-end ml-40 text-end' : 'justify-start mr-40 text-start'}`}>
+                                        <div key={message.id} className={`flex flex-row ${isCurrentUser ? 'justify-end ml-20 text-end' : 'justify-start mr-20 text-start'}`}>
                                             <div className={`flex flex-col text-sm px-4 pt-2 text-slate-300`}>
-                                                {!isSameAuthor && <p className={"mb-2 text-[18px] font-bold text-blue-500"}>{message.author}</p>}
+                                                {!isSameAuthor &&
+                                                    <div className={`flex items-center gap-2 ${isCurrentUser ? 'items-end ml-40 text-end flex-row-reverse' : 'items-end mr-40 text-start'}`}>
+                                                        <p className={" mt-2 mb-2 bg-discordGrey-dark rounded-full text-slate-300 h-8 w-8 flex justify-center items-center"}>{message.author[0]}</p>
+                                                        <p className={"mb-2 text-[18px] font-bold text-blue-500"}>{message.author}</p>
+                                                    </div>
+                                                    }
                                                 <div  className={`flex justify-end flex-row gap-2 ${isCurrentUser ? 'flex-row' : 'flex-row-reverse'}`}>
                                                     {isCurrentUser &&
                                                         <button onClick={() => handleMessageDelete( message.createdAt, message.author, message.room)}>
                                                             <AiOutlineDelete/>
                                                         </button>}
-
-                                                    <p className={"bg-discordGrey-light rounded-lg p-2 text-[16px] break-all"}>{message.message}</p>
+                                                    {imageUrl ? (
+                                                        <Image width={100} height={100} className={"bg-discordGrey-light rounded-lg p-2 text-[16px] break-all"} alt={"Message Image"} src={message.message}/>
+                                                    ) : (
+                                                        <p className={"bg-discordGrey-light rounded-lg p-2 text-[16px] break-all"}>{message.message}</p>
+                                                    )}
                                                 </div>
                                             </div>
 

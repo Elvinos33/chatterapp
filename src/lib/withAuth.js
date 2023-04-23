@@ -20,7 +20,7 @@ export const withAuth = (WrappedComponent) => {
         }, []);
 
         if (loading) {
-            return <div className={"h-screen w-screen bg-discordGrey-dark font-bold text-slate-300 flex justify-center items-center text-[4rem]"}>Checking credentials...</div>;
+            return <div className={"absolute inset-0 bg-discordGrey-dark font-bold text-slate-300 flex justify-center items-center text-[4rem]"}>Checking credentials...</div>;
         }
 
         return <WrappedComponent {...props} />;
