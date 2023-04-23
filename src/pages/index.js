@@ -7,7 +7,7 @@ import {addDoc, deleteDoc, getDocs, collection, onSnapshot, orderBy, query, serv
 import {AiOutlinePlus, AiOutlineSend, AiOutlineDelete} from "react-icons/ai";
 import {MdOutlineKeyboardArrowLeft, MdOutlineKeyboardArrowRight} from "react-icons/md";
 import {useForm} from "react-hook-form";
-import { reveal } from "react-burger-menu"
+import {useMediaQuery} from "react-responsive";
 
 
 function Home() {
@@ -23,6 +23,7 @@ function Home() {
     const messagesEndRef = useRef(null);
     const [showNewRoom, setShowNewRoom] = useState(false);
     const [showSidebar, setShowSidebar] = useState(false);
+    const isDesktop = useMediaQuery({ minWidth: 1024 });
 
     let prevAuthor = null;
     function handleRoomClick(roomId) {
@@ -88,7 +89,7 @@ function Home() {
             if (querySnapshot.size > 0) {
                 alert("Room already exists.")
             } else {
-                const docRef = await addDoc(collection(db, "Rooms"), {
+                return await addDoc(collection(db, "Rooms"), {
                     name: data.room.charAt(0).toUpperCase() + data.room.slice(1),
                     createdAt: serverTimestamp(),
                 })
@@ -108,7 +109,7 @@ function Home() {
     }
 
     function handleLogOut() {
-        auth.signOut()
+        auth.signOut().then(r => console.log("Signed Out", {r}))
     }
 
     useEffect(() => {
@@ -160,8 +161,8 @@ function Home() {
           <meta name="description" content="Chat app for you and your friends!" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
         </Head>
-        <main className={"h-screen flex"}>
-            <div className={`lg:w-1/5 sm:w-full bg-discordGrey-darker flex flex-col h-screen ${showSidebar ? 'hidden' : 'visible' } `}>
+        <main className={"absolute inset-0 flex"}>
+            <div className={`lg:w-1/5 lg:relative lg:mr-0 absolute inset-0 mr-8 bg-discordGrey-darker flex flex-col ${showSidebar ? 'sm:visible' : 'hidden' } `}>
                 <div className={"flex flex-row justify-center items-center"}>
                     <div>
                         <Menu>
@@ -179,11 +180,16 @@ function Home() {
                     </div>
 
                     <h1 className={"flex-1 font-bold py-4 text-slate-300 text-[20px] border-b border-discordGrey-dark"}>Hey, {auth.currentUser.displayName}</h1>
-                    <button onClick={handleAddRoomClick} className={"p-3 mx-4 text-slate-300 bg-discordGrey-dark rounded-lg flex items-center justify-center transition hover:bg-slate-300 hover:text-black "}>
+                    <button onClick={handleAddRoomClick} className={"p-3 m-4 text-slate-300 bg-discordGrey-dark rounded-lg flex items-center justify-center transition hover:bg-slate-300 hover:text-black "}>
                         <AiOutlinePlus className={""}/>
                     </button>
+                    {!isDesktop &&
+                        <button onClick={handleHideSidebarClick} className={"p-4 text-slate-300"}>
+                            <MdOutlineKeyboardArrowLeft/>
+                        </button>}
+
                 </div>
-                <div className={"overflow-scroll scrollbar-hide flex-1"}>
+                <div className={"overflow-y-scroll scrollbar-hide flex-1"}>
                     <Tab.Group vertical selectedIndex={selectedIndex} onChange={setSelectedIndex}>
                         <Tab.List className={"flex gap-4 flex-col "}>
                             {loadingRooms ? (
@@ -221,21 +227,21 @@ function Home() {
                     }
                 </div>
             </div>
-            <div className={"flex-1 bg-slate-300 h-screen flex flex-col"}>
+            <div className={"flex-1 h-full bg-slate-300 flex flex-col"}>
                 <div className={"text-center font-bold py-4 text-[18px] bg-discordGrey-dark shadow-xl flex"}>
                     <button onClick={handleHideSidebarClick} className={"px-4 text-slate-300"}>
                         {showSidebar ?
-                         <MdOutlineKeyboardArrowRight/>: <MdOutlineKeyboardArrowLeft/>
+                            <MdOutlineKeyboardArrowLeft/> : <MdOutlineKeyboardArrowRight/>
                         }
                     </button>
-                    <h1 className={"flex-1 pr-4 text-slate-300"}>{selectedRoom}</h1>
+                    <h1 className={"flex-1 pr-16 text-slate-300"}>{selectedRoom}</h1>
                 </div>
-                <div ref={messagesEndRef} className={"bg-discordGrey-std w-full h-screen pt-2 overflow-y-scroll"}>
+                <div ref={messagesEndRef} className={"bg-discordGrey-std w-full h-full pt-2 overflow-y-scroll"}>
                     {loadingMessages ? (
                         <p className={"text-center text-slate-300 p-4"}>Loading...</p>
                     ) : (
                         <>
-                            {messages.map((message, index) => {
+                            {messages.map((message) => {
                                 const isCurrentUser = message.author === auth.currentUser.displayName;
                                 const isSameAuthor = prevAuthor === message.author;
                                 prevAuthor = message.author;
@@ -263,7 +269,7 @@ function Home() {
                     )}
                 </div>
                 <div className={"bg-discordGrey-std"}>
-                    <div className={"mt-4 static flex justify-center items-center bg-discordGrey-dark"}>
+                    <div className={"mt-4 flex justify-center items-center bg-discordGrey-dark"}>
                         <form action="" onSubmit={handleSubmit(onSubmitMessage)} className={" flex text-[18px] my-4 w-full px-4"}>
                             <input type="text" autoComplete={"off"} className={"w-full rounded-lg p-2 bg-discordGrey-light placeholder-gray-400 placeholder-opacity-75 text-slate-300"} placeholder={"Message..."} {...register("message", {required: true})} />
                             <button type={"submit"} className={"mx-3"}>
