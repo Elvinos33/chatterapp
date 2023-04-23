@@ -15,6 +15,7 @@ export default function Login() {
                 // User logged in successfully
                 const user = userCredential.user;
                 console.log('User logged in successfully:', user);
+                // noinspection JSIgnoredPromiseFromCall
                 router.push("/")
                 reset();
             })

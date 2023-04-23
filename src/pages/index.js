@@ -8,7 +8,6 @@ import {AiOutlinePlus, AiOutlineSend, AiOutlineDelete} from "react-icons/ai";
 import {MdOutlineKeyboardArrowLeft, MdOutlineKeyboardArrowRight} from "react-icons/md";
 import {useForm} from "react-hook-form";
 import {useMediaQuery} from "react-responsive";
-import Image from "next/image";
 
 function Home() {
 
@@ -51,13 +50,14 @@ function Home() {
     // call handleSubmitChatGPT whenever prompt changes
     useEffect(() => {
         if (prompt) {
-            handleSubmitChatGPT();
+            handleSubmitChatGPT().then(r => console.log("ChatGPT Success: " + r));
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [prompt]);
 
     useEffect(() => {
         if (generatedText) {
-            const docRef = addDoc(collection(db, "Messages"), {
+           return addDoc(collection(db, "Messages"), {
                 author: "ChatGPT",
                 createdAt: serverTimestamp(),
                 message: generatedText,
@@ -84,7 +84,7 @@ function Home() {
             if (selectedRoom === "ChatGPT") {
                 setPrompt(data.message)
             }
-            const docRef = addDoc(collection(db, "Messages"), {
+            return addDoc(collection(db, "Messages"), {
                 author: auth.currentUser.displayName,
                 createdAt: serverTimestamp(),
                 message: data.message,
@@ -222,11 +222,9 @@ function Home() {
                             <Menu.Button className={"mx-4 bg-discordGrey-dark rounded-full text-slate-300 h-8 w-8 flex justify-center items-center"}>{auth.currentUser.displayName[0]}</Menu.Button>
                             <Menu.Items>
                                 <Menu.Item>
-                                    {({active}) => (
-                                        <button onClick={handleLogOut} className={" flex justify-center items-center flex-col absolute ml-2 text text-slate-300 mt-1 p-2 rounded-lg bg-discordGrey-dark z-50 hover:bg-slate-300 hover:text-black"}>
-                                            Log Out
-                                        </button>
-                                    )}
+                                    <button onClick={handleLogOut} className={" flex justify-center items-center flex-col absolute ml-2 text text-slate-300 mt-1 p-2 rounded-lg bg-discordGrey-dark z-50 hover:bg-slate-300 hover:text-black"}>
+                                        Log Out
+                                    </button>
                                 </Menu.Item>
                             </Menu.Items>
                         </Menu>
@@ -251,8 +249,6 @@ function Home() {
                                 <>
                                 {rooms.map((room) => (
                                         <Tab  as={Fragment} key={room.id}>
-                                            {({ selected }) => (
-                                                /* Use the `selected` state to conditionally style the selected tab. */
                                                 <div
                                                     onClick={() => handleRoomClick(room.name)}
                                                     className={
@@ -266,7 +262,6 @@ function Home() {
                                                         </button>
                                                     )}
                                                 </div>
-                                            )}
                                         </Tab>
 
                                     ))}
@@ -304,11 +299,12 @@ function Home() {
 
                                 return (
                                     <>
-                                        <div key={message.id} className={`flex flex-row ${isCurrentUser ? 'justify-end ml-68 text-end' : 'justify-start mr-80 text-start'}`}>
+                                        <div key={message.id} className={`flex flex-row ${isCurrentUser ? 'justify-end ml-32 lg:ml-[46rem] text-end' : 'justify-start mr-32 lg:mr-[46rem] text-start'}`}>
                                             <div className={`flex flex-col text-sm px-4 pt-2 text-slate-300`}>
                                                 {!isSameAuthor &&
                                                     <div className={`flex items-center gap-2 ${isCurrentUser ? 'items-end ml-40 text-end flex-row-reverse' : 'items-end mr-40 text-start'}`}>
                                                         {message.author === "ChatGPT" ? (
+                                                            // eslint-disable-next-line @next/next/no-img-element
                                                             <img  className={" mt-2 mb-2 bg-discordGrey-dark rounded-full text-slate-300 h-8 w-8 flex justify-center items-center"} src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fmedia.glassdoor.com%2Fsqll%2F2210885%2Fopenai-squarelogo-1560841328266.png&f=1&nofb=1&ipt=2b3aaa1bd4b087aa9aa694dcc0608f7063f7acf57f013e6aa4c67d5a1bb56f32&ipo=images" alt="OpenAi Logo"/>
                                                         ) : (
                                                             <p className={" mt-2 mb-2 bg-discordGrey-dark rounded-full text-slate-300 h-8 w-8 flex justify-center items-center"}>{message.author[0]}</p>
@@ -323,6 +319,7 @@ function Home() {
                                                             <AiOutlineDelete/>
                                                         </button>}
                                                     {imageUrl ? (
+                                                        // eslint-disable-next-line @next/next/no-img-element
                                                         <img width={300} height={300} className={"bg-discordGrey-light rounded-lg p-2 text-[16px]"} alt={"Message Image"} src={message.message}/>
                                                     ) : (
                                                         <p className={"bg-discordGrey-light rounded-lg p-2 text-[16px] break-normal"}>{message.message}</p>
