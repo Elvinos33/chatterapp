@@ -10,14 +10,13 @@ import {useForm} from "react-hook-form";
 import {useMediaQuery} from "react-responsive";
 import Image from "next/image";
 
-
 function Home() {
 
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [loadingRooms, setLoadingRooms] = useState(true);
     const [loadingMessages, setLoadingMessages] = useState(true);
     const [rooms, setRooms] = useState([]);
-    const [selectedRoom, setSelectedRoom] = useState("Welcome");
+    const [selectedRoom, setSelectedRoom] = useState("ChatGPT");
     const [messages, setMessages] = useState([]);
     const {register, handleSubmit, reset} = useForm();
     const {register:registerRoom, handleSubmit: handleSubmitRoom, reset: resetRoom} = useForm();
@@ -25,21 +24,67 @@ function Home() {
     const [showNewRoom, setShowNewRoom] = useState(false);
     const [showSidebar, setShowSidebar] = useState(false);
     const isDesktop = useMediaQuery({ minWidth: 1024 });
-
+    const [generatedText, setGeneratedText] = useState('');
+    const [prompt, setPrompt] = useState('');
     let prevAuthor = null;
+
+
+
+    const handleSubmitChatGPT = async () => {
+
+        console.log(prompt)
+
+        const res = await fetch('/api/chatGPT', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ prompt }),
+        });
+
+        const data = await res.json();
+        setGeneratedText(data.response.content);
+
+
+    };
+
+    // call handleSubmitChatGPT whenever prompt changes
+    useEffect(() => {
+        if (prompt) {
+            handleSubmitChatGPT();
+        }
+    }, [prompt]);
+
+    useEffect(() => {
+        if (generatedText) {
+            const docRef = addDoc(collection(db, "Messages"), {
+                author: "ChatGPT",
+                createdAt: serverTimestamp(),
+                message: generatedText,
+                room: "ChatGPT",
+            })
+        }
+    }, [generatedText]);
+
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     function handleRoomClick(roomId) {
         setSelectedRoom(roomId)
         setShowSidebar(false)
     }
 
+    // call handleSubmitChatGPT whenever prompt changes
+
     function handleHideSidebarClick() {
         setShowSidebar(!showSidebar)
     }
-
     async function onSubmitMessage(data) {
         try {
             reset();
-            return await addDoc(collection(db, "Messages"), {
+            if (selectedRoom === "ChatGPT") {
+                setPrompt(data.message)
+            }
+            const docRef = addDoc(collection(db, "Messages"), {
                 author: auth.currentUser.displayName,
                 createdAt: serverTimestamp(),
                 message: data.message,
@@ -115,7 +160,9 @@ function Home() {
     }
 
     function isImageUrl(url) {
-        return /\.(jpg|png|gif)$/.test(url);
+        const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
+        const extension = String(url).split(".").pop();
+        return imageExtensions.includes(extension.toLowerCase());
     }
 
     useEffect(() => {
@@ -213,7 +260,7 @@ function Home() {
                                                     }
                                                 >
                                                     <p>{room.name}</p>
-                                                    {room.name !== "Welcome" && (
+                                                    {room.name !== "ChatGPT" && (
                                                         <button onClick={() => handleRoomDelete(room.name)}>
                                                             <AiOutlineDelete/>
                                                         </button>
@@ -257,12 +304,17 @@ function Home() {
 
                                 return (
                                     <>
-                                        <div key={message.id} className={`flex flex-row ${isCurrentUser ? 'justify-end ml-20 text-end' : 'justify-start mr-20 text-start'}`}>
+                                        <div key={message.id} className={`flex flex-row ${isCurrentUser ? 'justify-end ml-68 text-end' : 'justify-start mr-80 text-start'}`}>
                                             <div className={`flex flex-col text-sm px-4 pt-2 text-slate-300`}>
                                                 {!isSameAuthor &&
                                                     <div className={`flex items-center gap-2 ${isCurrentUser ? 'items-end ml-40 text-end flex-row-reverse' : 'items-end mr-40 text-start'}`}>
-                                                        <p className={" mt-2 mb-2 bg-discordGrey-dark rounded-full text-slate-300 h-8 w-8 flex justify-center items-center"}>{message.author[0]}</p>
-                                                        <p className={"mb-2 text-[18px] font-bold text-blue-500"}>{message.author}</p>
+                                                        {message.author === "ChatGPT" ? (
+                                                            <img  className={" mt-2 mb-2 bg-discordGrey-dark rounded-full text-slate-300 h-8 w-8 flex justify-center items-center"} src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fmedia.glassdoor.com%2Fsqll%2F2210885%2Fopenai-squarelogo-1560841328266.png&f=1&nofb=1&ipt=2b3aaa1bd4b087aa9aa694dcc0608f7063f7acf57f013e6aa4c67d5a1bb56f32&ipo=images" alt="OpenAi Logo"/>
+                                                        ) : (
+                                                            <p className={" mt-2 mb-2 bg-discordGrey-dark rounded-full text-slate-300 h-8 w-8 flex justify-center items-center"}>{message.author[0]}</p>
+                                                        )}
+
+                                                        <p className={`mb-2 text-[18px] font-bold ${message.author === "ChatGPT" ? "text-green-300" : "text-blue-500"}`}>{message.author}</p>
                                                     </div>
                                                     }
                                                 <div  className={`flex justify-end flex-row gap-2 ${isCurrentUser ? 'flex-row' : 'flex-row-reverse'}`}>
@@ -271,9 +323,9 @@ function Home() {
                                                             <AiOutlineDelete/>
                                                         </button>}
                                                     {imageUrl ? (
-                                                        <Image width={100} height={100} className={"bg-discordGrey-light rounded-lg p-2 text-[16px] break-all"} alt={"Message Image"} src={message.message}/>
+                                                        <img width={300} height={300} className={"bg-discordGrey-light rounded-lg p-2 text-[16px]"} alt={"Message Image"} src={message.message}/>
                                                     ) : (
-                                                        <p className={"bg-discordGrey-light rounded-lg p-2 text-[16px] break-all"}>{message.message}</p>
+                                                        <p className={"bg-discordGrey-light rounded-lg p-2 text-[16px] break-normal"}>{message.message}</p>
                                                     )}
                                                 </div>
                                             </div>
