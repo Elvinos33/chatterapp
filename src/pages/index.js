@@ -162,7 +162,7 @@ function Home() {
           <meta name="viewport" content="width=device-width, initial-scale=1" />
         </Head>
         <main className={"absolute inset-0 flex"}>
-            <div className={`lg:w-1/5 lg:relative lg:mr-0 absolute inset-0 mr-8 bg-discordGrey-darker flex flex-col ${showSidebar ? 'sm:visible' : 'hidden' } `}>
+            <div className={`lg:w-1/5 lg:relative lg:mr-0 absolute inset-0 mr-8 bg-discordGrey-darker flex flex-col  ${showSidebar ? 'block' : 'hidden' } `}>
                 <div className={"flex flex-row justify-center items-center"}>
                     <div>
                         <Menu>
@@ -203,7 +203,7 @@ function Home() {
                                                 <div
                                                     onClick={() => handleRoomClick(room.name)}
                                                     className={
-                                                        selected ? 'flex justify-between p-4 mx-4 mt-2 rounded-lg bg-slate-200 translate-x-1 font-bold' : 'flex justify-between p-4 mx-4 mt-2 bg-discordGrey-std text-slate-400 rounded-lg transition transform hover:translate-x-1 hover:bg-slate-300 hover:text-black'
+                                                        selected ? 'flex justify-between p-4 mx-4 m-2 rounded-lg bg-slate-200 translate-x-1 font-bold' : 'flex justify-between p-4 mx-4 m-2 bg-discordGrey-std text-slate-400 rounded-lg transition transform hover:translate-x-1 hover:bg-slate-300 hover:text-black'
                                                     }
                                                 >
                                                     <p>{room.name}</p>
