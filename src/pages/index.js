@@ -71,6 +71,7 @@ function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     function handleRoomClick(roomId) {
         setSelectedRoom(roomId)
+        setLoadingMessages(true)
         setShowSidebar(false)
     }
 
@@ -215,7 +216,7 @@ function Home() {
           <meta name="description" content="Chat app for you and your friends!" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
         </Head>
-        <main className={"absolute inset-0 flex"}>
+        <main className={"absolute inset-0 flex bg-discordGrey-std"}>
             <div className={`lg:w-1/5 lg:relative lg:mr-0 absolute inset-0 mr-8 bg-discordGrey-darker flex flex-col  ${ isDesktop || showSidebar ? 'block' : 'hidden' }`}>
                 <div className={"flex flex-row justify-center items-center"}>
                     <div>
@@ -335,12 +336,12 @@ function Home() {
                         </>
                     )}
                 </div>
-                <div className={"bg-discordGrey-std"}>
-                    <div className={"mt-4 flex justify-center items-center"}>
-                        <form action="" onSubmit={handleSubmit(onSubmitMessage)} className={" flex my-3 w-full px-4"}>
-                            <input type="text" autoComplete={"off"} className={"w-full rounded-lg p-2 bg-discordGrey-dark placeholder-gray-400 placeholder-opacity-60 text-slate-300"} placeholder={"Message..."} {...register("message", {required: true})} />
-                            <button type={"submit"} className={"mx-3"}>
-                                <AiOutlineSend className={"h-11 w-11 flex-1 rounded-lg p-3 bg-discordGrey-dark text-gray-400 transition hover:text-black hover:bg-slate-300"}/>
+                <div className={"bg-gradient-to-b from-discordGrey-std to-discordGrey-dark"}>
+                    <div className={" flex justify-center items-center"}>
+                        <form action="" onSubmit={handleSubmit(onSubmitMessage)} className={" flex mb-5 mt-3 w-full lg:px-20 px-8"}>
+                            <input type="text" autoComplete={"off"} className={"w-full shadow-xl rounded-r-none rounded-lg p-2 bg-discordGrey-dark placeholder-gray-400 placeholder-opacity-60 text-slate-300"} placeholder={"Message..."} {...register("message", {required: true})} />
+                            <button type={"submit"} className={""}>
+                                <AiOutlineSend className={"h-11 w-11 flex-1 rounded-lg  shadow-xl rounded-l-none p-3 bg-discordGrey-dark text-gray-400 transition hover:bg-discordGrey-light"}/>
                             </button>
                         </form>
                     </div>
