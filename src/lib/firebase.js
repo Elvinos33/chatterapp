@@ -23,7 +23,7 @@ const firebaseConfig = {
 
     projectId: "chatappyff",
 
-    storageBucket: "chatappyff.appspot.com",
+    storageBucket: "gs://chatappyff.appspot.com",
 
     messagingSenderId: "950225970421",
 

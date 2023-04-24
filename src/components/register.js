@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
-import {auth} from "@/lib/firebase";
+import {auth, db} from "@/lib/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { collection, addDoc } from "firebase/firestore";
 
 
 export default function Register({setShowLogin, setShowRegister}) {
@@ -15,6 +16,12 @@ export default function Register({setShowLogin, setShowRegister}) {
                 const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
                 await updateProfile(auth.currentUser, {
                     displayName: data.displayName// Signed in
+                })
+
+                // noinspection JSUnusedLocalSymbols
+                const docRef = addDoc(collection(db, "Users"), {
+                    email: data.email,
+
                 })
 
                 reset();

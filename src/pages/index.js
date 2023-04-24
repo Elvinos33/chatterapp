@@ -57,7 +57,8 @@ function Home() {
 
     useEffect(() => {
         if (generatedText) {
-           return addDoc(collection(db, "Messages"), {
+           // noinspection JSUnusedLocalSymbols
+            const docRef = addDoc(collection(db, "Messages"), {
                 author: "ChatGPT",
                 createdAt: serverTimestamp(),
                 message: generatedText,
@@ -335,11 +336,11 @@ function Home() {
                     )}
                 </div>
                 <div className={"bg-discordGrey-std"}>
-                    <div className={"mt-4 flex justify-center items-center bg-discordGrey-dark"}>
-                        <form action="" onSubmit={handleSubmit(onSubmitMessage)} className={" flex text-[18px] my-4 w-full px-4"}>
-                            <input type="text" autoComplete={"off"} className={"w-full rounded-lg p-2 bg-discordGrey-light placeholder-gray-400 placeholder-opacity-75 text-slate-300"} placeholder={"Message..."} {...register("message", {required: true})} />
+                    <div className={"mt-4 flex justify-center items-center"}>
+                        <form action="" onSubmit={handleSubmit(onSubmitMessage)} className={" flex my-3 w-full px-4"}>
+                            <input type="text" autoComplete={"off"} className={"w-full rounded-lg p-2 bg-discordGrey-dark placeholder-gray-400 placeholder-opacity-60 text-slate-300"} placeholder={"Message..."} {...register("message", {required: true})} />
                             <button type={"submit"} className={"mx-3"}>
-                                <AiOutlineSend className={"h-12 w-12 flex-1 rounded-lg p-3 bg-discordGrey-light text-slate-300 transition hover:text-black hover:bg-slate-300"}/>
+                                <AiOutlineSend className={"h-11 w-11 flex-1 rounded-lg p-3 bg-discordGrey-dark text-gray-400 transition hover:text-black hover:bg-slate-300"}/>
                             </button>
                         </form>
                     </div>
