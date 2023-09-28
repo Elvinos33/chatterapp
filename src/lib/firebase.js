@@ -17,19 +17,7 @@ import { getFirestore} from "firebase/firestore";
 
 const firebaseConfig = {
 
-    apiKey: "AIzaSyAlFpib2xmQnO4U89yPSotD6TB4Dl7rX5U",
-
-    authDomain: "chatappyff.firebaseapp.com",
-
-    projectId: "chatappyff",
-
-    storageBucket: "gs://chatappyff.appspot.com",
-
-    messagingSenderId: "950225970421",
-
-    appId: "1:950225970421:web:126e54c89002fe909791bc",
-
-    measurementId: "G-7Q20931YJE"
+    //Secret
 
 };
 
